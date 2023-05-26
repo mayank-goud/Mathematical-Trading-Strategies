@@ -1,0 +1,74 @@
+!pip install yfinance
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Set the start and end dates
+start_date = "2010-01-01"
+end_date = "2023-05-17"  # Today's date
+
+# Fetch index data
+indices = ["^GSPC", "^FTSE", "^N225", "^GDAXI", "000001.SS"]
+index_names = ["S&P 500", "FTSE 100", "Nikkei 225", "DAX", "Shanghai Composite"]
+index_data = yf.download(indices, start=start_date, end=end_date)["Adj Close"]
+
+# Fetch equity data
+equities = ["AAPL", "AMZN", "MSFT", "GOOGL"]
+equity_data = yf.download(equities, start=start_date, end=end_date)["Adj Close"]
+
+# Calculate daily returns for indices and equities
+index_returns = index_data.pct_change().dropna()
+equity_returns = equity_data.pct_change().dropna()
+
+# Calculate cumulative returns for indices and equities
+index_cumulative_returns = (1 + index_returns).cumprod()
+equity_cumulative_returns = (1 + equity_returns).cumprod()
+
+# Calculate maximum drawdowns for indices and equities
+index_drawdowns = (index_cumulative_returns / index_cumulative_returns.cummax()) - 1
+equity_drawdowns = (equity_cumulative_returns / equity_cumulative_returns.cummax()) - 1
+
+# Calculate Sharpe ratio for indices and equities
+risk_free_rate = 0.0  # Assuming no risk-free rate for simplicity
+index_sharpe_ratio = (index_returns.mean() - risk_free_rate) / index_returns.std()
+equity_sharpe_ratio = (equity_returns.mean() - risk_free_rate) / equity_returns.std()
+
+# Calculate Sortino ratio for indices and equities
+index_downside_returns = index_returns.where(index_returns < 0, 0)
+equity_downside_returns = equity_returns.where(equity_returns < 0, 0)
+index_sortino_ratio = (index_returns.mean() - risk_free_rate) / index_downside_returns.std()
+equity_sortino_ratio = (equity_returns.mean() - risk_free_rate) / equity_downside_returns.std()
+
+
+
+# Printing the metrics
+print("Indices Daily Returns:")
+print(index_returns.head())
+
+print("\nEquities Daily Returns:")
+print(equity_returns.head())
+
+print("\nIndices Cumulative Returns:")
+print(index_cumulative_returns.tail())
+
+print("\nEquities Cumulative Returns:")
+print(equity_cumulative_returns.tail())
+
+print("\nIndices Max Drawdowns:")
+print(index_drawdowns.min())
+
+print("\nEquities Max Drawdowns:")
+print(equity_drawdowns.min())
+
+print("\nIndices Sharpe Ratios:")
+print(index_sharpe_ratio)
+
+print("\nEquities Sharpe Ratios:")
+print(equity_sharpe_ratio)
+
+print("\nIndices Sortino Ratios:")
+print(index_sortino_ratio)
+
+print("\nEquities Sortino Ratios:")
+print(equity_sortino_ratio)
